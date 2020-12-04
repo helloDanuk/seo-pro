@@ -65,6 +65,7 @@ class Cascade
             'locale' => $this->locale(),
             'alternate_locales' => $this->alternateLocales(),
             'last_modified' => $this->lastModified(),
+            'twitter_card' => config('statamic.seo-pro.twitter.card'),
         ])->all();
     }
 
@@ -131,9 +132,12 @@ class Cascade
 
     protected function compiledTitle()
     {
-        $siteName = $this->data->get('site_name');
+        $title = Str::trim($this->data->get('title'));
+        $siteName = Str::trim($this->data->get('site_name'));
+        $siteNameSeparator = Str::trim($this->data->get('site_name_separator'));
+        $siteNameBefore = (string) $this->data->get('site_name_position') === 'before';
 
-        if (! $title = $this->data->get('title')) {
+        if (! $title) {
             return $siteName;
         }
 
@@ -141,20 +145,13 @@ class Cascade
             return $title;
         }
 
-        $compiled = '';
-        $separator = (string) $this->data->get('site_name_separator');
+        $compiled = collect([$title, $siteNameSeparator, $siteName]);
 
-        if ((string) $this->data->get('site_name_position') === 'before') {
-            $compiled .= $siteName.' '.$separator.' ';
+        if ($siteNameBefore) {
+            $compiled = $compiled->reverse();
         }
 
-        $compiled .= $title;
-
-        if ((string) $this->data->get('site_name_position') === 'after') {
-            $compiled .= ' '.$separator.' '.$siteName;
-        }
-
-        return $compiled;
+        return $compiled->implode(' ');
     }
 
     protected function ogTitle()
